@@ -1,0 +1,58 @@
+# Downloaded dependencies and local caches
+/packages/
+/.cache/
+
+# SCons and CMake build output
+build/
+dist/
+.sconsign*
+.sconf_temp/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+cmake-build-*/
+compile_commands.json
+
+# Compiler output
+*.o
+*.obj
+*.d
+*.dep
+*.elf
+*.axf
+*.map
+*.lst
+*.su
+/rtthread.bin
+/rtthread.hex
+/rt-thread.bin
+/rt-thread.hex
+
+# MDK output and per-user settings; keep project templates
+Objects/
+Listings/
+*.uvguix.*
+*.uvgui.*
+*.build_log.htm
+
+# Python tools
+__pycache__/
+*.py[cod]
+.pytest_cache/
+/.venv/
+/venv/
+
+# Local IDE settings
+/.vscode/
+/.idea/
+/.vs/
+
+# Editor and operating-system temporary files
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Keep .config, rtconfig.h, vendor libraries and firmware assets versioned.
