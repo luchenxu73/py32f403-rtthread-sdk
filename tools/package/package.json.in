@@ -1,0 +1,15 @@
+{
+  "name": "py32f403_sdk",
+  "description": "Puya PY32F403 CMSIS Device and HAL SDK for RT-Thread",
+  "description_zh": "普冉 PY32F403 Device 与 HAL SDK",
+  "enable": "PKG_USING_PY32F403_SDK",
+  "keywords": ["PY32", "PY32F403", "Puya", "HAL"],
+  "category": "peripherals",
+  "author": {"name": "luchenxu73", "github": "luchenxu73", "email": "luchenxu73@gmail.com"},
+  "license": "BSD-3-Clause AND Apache-2.0",
+  "repository": "https://github.com/luchenxu73/py32-rtthread-sdk",
+  "icon": "unknown",
+  "homepage": "https://github.com/luchenxu73/py32-rtthread-sdk#readme",
+  "doc": "https://github.com/luchenxu73/py32-rtthread-sdk#readme",
+  "site": [{"version": "latest", "URL": "https://github.com/luchenxu73/py32-rtthread-sdk.git", "filename": ""}]
+}
