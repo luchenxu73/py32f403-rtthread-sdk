@@ -7,9 +7,9 @@
   "category": "peripherals",
   "author": {"name": "luchenxu73", "github": "luchenxu73", "email": "luchenxu73@gmail.com"},
   "license": "BSD-3-Clause AND Apache-2.0",
-  "repository": "https://github.com/luchenxu73/py32-rtthread-sdk",
+  "repository": "https://github.com/luchenxu73/py32f403-rtthread-sdk",
   "icon": "unknown",
-  "homepage": "https://github.com/luchenxu73/py32-rtthread-sdk#readme",
-  "doc": "https://github.com/luchenxu73/py32-rtthread-sdk#readme",
-  "site": [{"version": "latest", "URL": "https://github.com/luchenxu73/py32-rtthread-sdk.git", "filename": ""}]
+  "homepage": "https://github.com/luchenxu73/py32f403-rtthread-sdk#readme",
+  "doc": "https://github.com/luchenxu73/py32f403-rtthread-sdk#readme",
+  "site": [{"version": "latest", "URL": "https://github.com/luchenxu73/py32f403-rtthread-sdk.git", "filename": "", "VER_SHA": "main"}]
 }

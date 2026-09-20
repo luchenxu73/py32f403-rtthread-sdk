@@ -60,7 +60,7 @@ GCC/Clang 必须由该处理函数调用 `entry`，随后由 RT-Thread 主线程
 | --- | --- |
 | 包名 | `py32f403_sdk` |
 | 配置项 | `PKG_USING_PY32F403_SDK` |
-| 获取布局 | 整仓 checkout 或裁剪 ZIP；安装后的包根有 `SConscript`，SDK 在 `sdk/py32f403/` |
+| 获取布局 | 整仓 checkout 或裁剪 ZIP；安装后的包根有 `SConscript`，SDK 在 `sdk/` |
 | 内容边界 | Device 头文件、system、启动文件与 HAL 合包 |
 | CMSIS-Core | 默认依赖 `PKG_USING_CMSIS_CORE` 共享软件包 |
 | BSP 提供 | 芯片宏、`py32f403_hal_conf.h`、时钟与引脚配置、链接脚本 |

@@ -91,6 +91,51 @@ class DownloadValidationTests(unittest.TestCase):
             self.assertEqual(download.new_output(self.base / ".cache/new", self.source),
                              self.base / ".cache/new")
 
+    def test_index_archive_uses_committed_tree_despite_local_extensions(self):
+        """Use a real Git tree to keep staged and untracked index edits isolated."""
+        env_root = self.base / "env"
+        baseline = env_root / "packages/packages"
+        baseline.mkdir(parents=True)
+        command = ["git", "-c", "safe.directory=" + baseline.as_posix(),
+                   "-c", "user.name=Package test", "-c", "user.email=test@example.invalid",
+                   "-c", "core.autocrlf=false", "-C", str(baseline)]
+
+        def git(*args):
+            return subprocess.check_output(command + list(args), stderr=subprocess.PIPE,
+                                           text=True).strip()
+
+        git("init", "--quiet")
+        menu = baseline / "peripherals/hal-sdk/Kconfig"
+        self.write(menu, 'menu "COMMITTED BASELINE"\nendmenu\n')
+        core = baseline / download.CORE_INDEX
+        original_url = "https://example.invalid/committed-core.git"
+        self.write(core / "package.json", json.dumps({"site": [{"version": "latest", "URL": original_url}]}))
+        self.write(core / "Kconfig", 'config CORE_VER\n    string\n    default "latest"\n')
+        git("add", ".")
+        git("commit", "--quiet", "-m", "Pinned test index")
+        revision = git("rev-parse", "HEAD")
+        self.write(menu, 'menu "LOCAL WORKTREE ONLY"\nendmenu\n')
+        self.write(core / "package.json", json.dumps({"site": [{"version": "latest", "URL": "https://example.invalid/local-only.git"}]}))
+        git("add", ".")
+        local_package = baseline / "peripherals/hal-sdk/local/package.json"
+        self.write(local_package, '{"name": "local-only"}\n')
+        before_status = git("status", "--porcelain")
+        self.assertTrue(before_status)
+        target = self.base / "isolated-index"
+        with patch.object(download, "INDEX_REVISION", revision):
+            actual_url = download.prepare_index(env_root, target, "https://example.invalid/sdk.zip")
+        self.assertEqual(actual_url, original_url)
+        self.assertIn("COMMITTED BASELINE", (target / "packages/peripherals/hal-sdk/Kconfig").read_text())
+        self.assertNotIn("LOCAL WORKTREE ONLY", (target / "packages/peripherals/hal-sdk/Kconfig").read_text())
+        self.assertFalse((target / "packages/peripherals/hal-sdk/local").exists())
+        self.assertEqual(git("status", "--porcelain"), before_status)
+        self.assertEqual(menu.read_text(), 'menu "LOCAL WORKTREE ONLY"\nendmenu\n')
+        wrong_target = self.base / "wrong-revision-index"
+        with patch.object(download, "INDEX_REVISION", "0" * 40):
+            with self.assertRaisesRegex(ValueError, "expected .*found"):
+                download.prepare_index(env_root, wrong_target, "https://example.invalid/sdk.zip")
+        self.assertFalse(wrong_target.exists())
+
     def test_clean_copy_skips_all_packages_and_does_not_follow_known_sdk_links(self):
         for filename in (".config", "SConstruct", "board/board.c", "libraries/Kconfig"):
             self.write(self.source / filename, "source\n")

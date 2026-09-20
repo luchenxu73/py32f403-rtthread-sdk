@@ -164,12 +164,29 @@ class PrepareTests(unittest.TestCase):
         self.revisions[self.cmsis] = "f" * 40
         self.assert_local_rejected_without_writes("expected .*found")
 
-    def test_dirty_baseline_index_is_rejected_before_writes(self):
-        self.dirty[self.env / "packages/packages"] = "?? local-index-entry"
+    def test_dirty_baseline_index_does_not_import_local_extensions(self):
+        baseline = self.env / "packages/packages"
+        local_menu = baseline / "peripherals/hal-sdk/Kconfig"
+        local_package = baseline / "peripherals/hal-sdk/local/package.json"
+        self.write(local_menu, 'menu "LOCAL WORKTREE ONLY"\nendmenu\n')
+        self.write(local_package, '{"name": "local-only"}\n')
+        self.dirty[baseline] = " M peripherals/hal-sdk/Kconfig\n?? peripherals/hal-sdk/local/"
+        with redirect_stdout(io.StringIO()):
+            prepare.prepare_index(self.args)
+        self.assertIn('menu "HAL SDK"', self.parent_menu.read_text())
+        self.assertNotIn("LOCAL WORKTREE ONLY", self.parent_menu.read_text())
+        self.assertFalse((self.index / "packages/peripherals/hal-sdk/local").exists())
+        self.assertEqual(local_menu.read_text(), 'menu "LOCAL WORKTREE ONLY"\nendmenu\n')
+        self.assertEqual(local_package.read_text(), '{"name": "local-only"}\n')
+        self.run_mock.assert_not_called()
+
+    def test_wrong_baseline_index_revision_is_rejected_before_writes(self):
+        self.revisions[self.env / "packages/packages"] = "f" * 40
         before = self.snapshot()
-        with self.assertRaisesRegex(ValueError, "Pinned dependency has local modifications"):
+        with self.assertRaisesRegex(ValueError, "expected .*found"):
             prepare.prepare_index(self.args)
         self.assertEqual(before, self.snapshot())
+        self.run_mock.assert_not_called()
 
     def test_cli_resolves_relative_index_path_in_reported_environment(self):
         previous = Path.cwd()
@@ -192,17 +209,18 @@ class PrepareTests(unittest.TestCase):
             prepare.main()
         package_json = self.index / "packages" / prepare.SDK_INDEX / "package.json"
         mapping = json.loads(package_json.read_bytes())
-        self.assertEqual(mapping["repository"], "https://github.com/luchenxu73/py32-rtthread-sdk")
+        self.assertEqual(mapping["repository"], "https://github.com/luchenxu73/py32f403-rtthread-sdk")
         self.assertEqual(mapping["homepage"], mapping["repository"] + "#readme")
         self.assertEqual(mapping["site"][0]["URL"], prepare.SDK_GIT_URL)
         self.assertEqual(mapping["site"][0]["VER_SHA"], "c" * 40)
         self.assertEqual(mapping["author"]["email"], "luchenxu73@gmail.com")
 
-    def test_package_template_has_confirmed_metadata_without_an_invented_revision(self):
+    def test_package_template_tracks_main_for_latest_downloads(self):
         template = json.loads((SCRIPT.parent / "package/package.json.in").read_text(encoding="utf-8"))
         self.assertEqual(template["author"]["email"], prepare.SDK_AUTHOR_EMAIL)
         self.assertEqual(template["site"][0]["URL"], prepare.SDK_GIT_URL)
-        self.assertNotIn("VER_SHA", template["site"][0])
+        self.assertEqual(template["site"][0]["version"], "latest")
+        self.assertEqual(template["site"][0]["VER_SHA"], "main")
 
     def test_fixed_download_mapping_is_created_and_repeat_preserves_it_explicitly(self):
         self.args.sdk_url = "https://example.invalid/account/sdk.git"

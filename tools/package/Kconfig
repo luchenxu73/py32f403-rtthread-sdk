@@ -12,7 +12,7 @@ if PKG_USING_PY32F403_SDK
         prompt "Version"
         default PKG_USING_PY32F403_SDK_LATEST_VERSION
         config PKG_USING_PY32F403_SDK_LATEST_VERSION
-            bool "latest (fixed candidate commit in the test index)"
+            bool "latest"
     endchoice
 
     config PKG_PY32F403_SDK_VER

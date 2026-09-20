@@ -19,7 +19,7 @@ import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SDK = "sdk/py32f403"
+SDK = "sdk"
 REQUIRED_FILES = (
     "SConscript", "LICENSE", "README.md",
     SDK + "/SConscript", SDK + "/README.md",

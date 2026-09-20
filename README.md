@@ -1,164 +1,113 @@
-# PY32 RT-Thread SDK
+# PY32F403 RT-Thread SDK
 
-本仓维护 PY32 的厂商 SDK 软件包、构建适配和本地验证工具。公开仓库地址为
-[py32-rtthread-sdk](https://github.com/luchenxu73/py32-rtthread-sdk)，
-维护邮箱为 `luchenxu73@gmail.com`。BSP 本体在 RT-Thread fork 的
-`bsp/py32/py32f403_start_kit/`，本仓不保存 BSP 副本。
+基于普冉官方SDK，为 RT-Thread 提供 HAL_SDK 包。
 
-SDK 代码已公开，当前尚未向 packages 提交索引，也未完成板上验收。暂不配置 CI。
-临时产物、`AGENTS.md`、提示词及开发计划不进入提交；包导出采用文件白名单。
+当前支持的开发板：
+- py32f403_start_kit
 
-## 已确认的首板配置
+## 快速开始
 
-| 项目 | 配置 |
-| --- | --- |
-| 板名 / MCU | `py32f403_start_kit` / PY32F403V1DT6（`PY32F403xD`） |
-| Flash / SRAM | 384 KiB / 64 KiB |
-| 时钟 | HSE 24 MHz 直驱 SYSCLK，PLL 关闭，AHB/APB1 24 MHz，APB2 12 MHz |
-| 控制台 | uart2，PA2 TX / PA3 RX，AF2，115200 8N1 |
-| LED | PA1，低有效，默认应用每 500 ms 切换亮灭 |
-| 用户按钮 | PA0，按官方 Start Kit V2 定义；尚无 EXTI 驱动 |
+在 Env 终端进入 RT-Thread 源码根目录，打开 BSP 配置菜单：
 
-启动阶段用 DWT 为 HAL 超时计时，调度启动后接入 RT-Thread tick（1000 Hz）。
-外部晶振失败时明确停机供调试器检查，不静默回退至另一套时钟配置。
-
-## 软件包与 BSP 的分工
-
-- 本仓提供 `py32f403_sdk`：Device、system、启动文件和 HAL 合包，入口为根
-  `SConscript`，显式调用 `sdk/py32f403/SConscript`。
-- packages 仓只接收 `Kconfig`、`package.json` 及菜单接入；下载地址指向本仓
-  固定提交或版本化 ZIP。索引模板在 `tools/package/`。
-- RT-Thread 仓提交 BSP、共享驱动、链接脚本和分发适配，不提交厂商 SDK。
-- CMSIS-Core 使用独立共享包；缺包时报错，不回退到厂商自带 Core。
-
-`sdk/py32f403/RTThread/` 是新增的启动适配目录，保留官方启动原件用于比对。
-GCC/Clang 的复位处理函数改为进入 RT-Thread `entry()`，由内核启动主线程后调用
-应用 `main()`；MDK 继续使用原版启动文件及 `$Sub$$main` 接入。详细来源和差异见
-[SDK 说明](sdk/py32f403/README.md)。
-
-## 当前本地下载验证
-
-需要 Python 3.11、SCons、kconfiglib 及 Env 的 Python 依赖。本机可使用
-`../env-windows/.venv/Scripts/python.exe`；以下 `python` 均指该解释器。
-
-在本仓执行，输出目录必须尚不存在：
-
-```powershell
-python tools/validate_download.py --env-root ../env-windows --bsp-source ../rt-thread/bsp/py32/py32f403_start_kit --output .cache/download-check
+```shell
+cd bsp/py32/py32f403_start_kit
+scons --menuconfig
 ```
 
-此命令导出候选 ZIP，建立隔离测试索引，在临时本机 HTTP 服务上提供 SDK，
-然后由真实 Env 执行 `pkgs --update`。CMSIS-Core 从公开 Git 仓库拉取并固定 SHA。
-验证包括下载摘要、逐文件清单、无软链接/junction、SDK 自动移入 `libraries/`
-及 Env 自动生成的板卡包桥接脚本。不会替换已有 Env 索引或修改源 BSP。
+软件包位于以下菜单：
 
-成功后，日志、`download-validation.json` 和装好实体依赖的 `bsp/` 位于输出目录。
-这覆盖实际包管理器的下载、解包和接入流程；公开 ZIP 地址及上游索引的验收
-仍需在相应版本发布后另做。脚本也接受 `--sdk-url <公开ZIP地址>` 与
-`--sdk-sha256 <64位摘要>`，用于公开产物验收。
-
-已另外完成公开 Git 下载验收：临时索引使用版本 `test-d0e91f3517a9`，URL 指向
-本仓 HTTPS Git 地址，`VER_SHA` 固定为 `d0e91f3517a91e5df8931d829ee53efc8420bde3`。
-真实 Env 下载后，SDK 的全部 166 个文件和 Git blob 与发布提交一致；CMSIS-Core
-也按下表固定提交下载。两个包均为干净的 detached checkout，不使用本地映射。
-这项验证使用独立本地索引，尚不代表官方 packages 索引已收录。
-
-构建该干净副本（从 SDK 仓根目录执行）：
-
-```powershell
-$env:RTT_ROOT = (Resolve-Path ../rt-thread).Path
-$env:ENV_ROOT = (Resolve-Path .cache/download-check/env).Path
-$env:PKGS_DIR = (Resolve-Path .cache/download-check/index).Path
-$env:RTT_CC = 'gcc'
-$env:RTT_EXEC_PATH = 'D:/dev_tools/arm-gcc/bin'
-Set-Location .cache/download-check/bsp
-python -m SCons --pyconfig-silent
-python -m SCons -j8
+```text
+RT-Thread online packages
+    peripheral libraries and drivers
+        HAL & SDK Drivers
+            [*] PY32F403 SDK (Device and HAL)
+                Version (latest)
 ```
 
-`rtconfig.h` 由 `.config` 生成，不手工修改。GCC 使用 Arm GNU Toolchain
-15.2.Rel1。Clang 配置如下，MDK 则设置 `RTT_CC=keil` 并指向 Arm Compiler 6 的 bin：
-
-```powershell
-$env:RTT_CC = 'llvm-arm'
-$env:RTT_EXEC_PATH = 'D:/dev_tools/ATfE-22.1.0-Windows-x86_64/bin'
-$env:RTT_GNU_ROOT = 'D:/dev_tools/arm-gcc'
-python -m SCons -j8
-```
-
-Clang 使用 LLD、ATfE compiler-rt 和 GNU newlib-nano 4.5.0。内部
-`PLATFORM='gcc'` 用于选择 RT-Thread 现有 GNU ABI/newlib 适配，编译器仍为
-Clang；不使用需要额外 TLS 初始化的默认 Picolibc。上游部分 GCC 专属警告选项会触发
-Clang 警告，当前仅验收默认 C 工程，尚未验收 C++。
-
-`tools/prepare.py local` 保留为可选的 SDK 联调映射工具；它不等价于下载验证。
-当前主 BSP 的依赖已改为经过下载验证的实体副本，其来源记录在被忽略的
-`packages/py32-download.json`。修改 SDK 后需重新导出、下载验证并更新依赖，
-这些副本不会自动同步。此本地接入记录不声称主 BSP 原地运行过 `pkgs --update`。
-
-## 发布与索引准备
-
-```powershell
-python tools/export_package.py
-```
-
-候选 ZIP、SHA-256 与逐文件清单输出到 `dist/`，记录源码提交及 dirty 状态。
-ZIP 含唯一顶层目录，以符合 Env 解包约定；安装后包根仍有 `SConscript`。
-输出裁剪厂商 Core、RTOS/RTOS2、Start Kit 示例和开发临时文件，仓内原件保留。
-`--release` 要求干净且已提交的源码；候选包不代表已发布版本。
-
-SDK 提交公开可获取后，使用其真实 40 位 SHA 生成测试索引：
-
-```powershell
-python tools/prepare.py index --env-root ../env-windows --sdk-revision <已发布SDK提交SHA>
-```
-
-默认 URL 为 `https://github.com/luchenxu73/py32-rtthread-sdk.git`，默认邮箱为
-上述维护邮箱，均可通过参数覆盖。没有显式 SHA 时只准备配置菜单，不虚构可下载
-版本。生成的独立索引位于 `.cache/package-index`，不会修改现有 Env 索引。
-固定 SHA 测试应将隔离索引的版本改为 `test-<SHA前12位>`，同步修改其 Kconfig
-版本值，并先运行 `scons --pyconfig-silent` 更新测试 BSP 配置，再执行下载。
-当前 Env 对 `latest` 还会追加 `git pull`，因此固定提交验收使用独立测试版本号。
-正式版本应补充 tag/版本菜单，再由维护者分别提交 packages 与 RT-Thread PR。
-
-索引包含所需版本后，在板卡目录使用标准流程：
+完整配置后更新packages:
 
 ```text
 pkgs --update
+```
+
+SDK 将被安装到 `bsp/py32/libraries/py32f403_sdk-latest/`下。执行以下命令即可完成构建：
+
+```shell
+scons -j8
+```
+
+## 编译构建
+
+**GCC**：
+
+```powershell
+$env:RTT_CC = 'gcc'
+$env:RTT_EXEC_PATH = 'C:/toolchains/arm-gnu/bin'
 scons --pyconfig-silent
 scons -j8
 ```
 
-固定 Env 将 HAL SDK 安装到系列 `libraries/`，板卡 `packages/` 保存桥接入口，
-CMSIS-Core 位于板卡 `packages/`。`scons --dist` 会将依赖实体化到分发产物。
+**Clang**：
 
-## 验证范围
+```powershell
+$env:RTT_CC = 'llvm-arm'
+$env:RTT_EXEC_PATH = 'C:/toolchains/ATfE/bin'
+$env:RTT_GNU_ROOT = 'C:/toolchains/arm-gnu'
+scons --pyconfig-silent
+scons -j8
+```
 
-本地测试结果与日志保存在被忽略的 `.cache/`，不是 CI 或板上通过声明。
-本轮 Start Kit 的三工具链及下载包分发构建结果见对应本地验证记录。
+Clang 使用 LLD、ATfE compiler-rt 和 GNU newlib-nano，因此仍需安装 Arm GNU Toolchain，
+并将 `RTT_GNU_ROOT` 指向其根目录。
 
-| 项目 | 范围 |
+**MDK**（已验证 Arm Compiler 6.19）：
+
+```powershell
+$env:RTT_CC = 'keil'
+$env:RTT_EXEC_PATH = 'C:/Keil_v5/ARM/ARMCLANG/bin'
+scons --pyconfig-silent
+scons -j8
+```
+
+构建产物为 `rtthread.bin`；GCC / Clang 同时生成 `rtthread.elf`，MDK 生成 `rtthread.axf`。
+板卡 Flash 起始地址为 `0x08000000`，烧录后可通过 UART2 查看启动信息。
+
+配套 BSP 还支持以下工程生成与分发命令，请先设置对应工具链：
+
+| 命令                   | 用途                                          |
+| ---------------------- | --------------------------------------------- |
+| `scons --target=mdk5`  | 使用 MDK 工具链配置，生成 Arm Compiler 6 工程 |
+| `scons --target=cmake` | 使用 GCC 配置，生成 CMake 工程                |
+| `scons --target=vsc`   | 使用 GCC 配置，生成 VS Code 配置              |
+| `scons --cdb`          | 生成编译数据库                                |
+| `scons --dist`         | 生成包含 RT-Thread 和依赖软件包的 BSP 分发包  |
+
+
+## Support
+
+当前配套板卡为 `py32f403_start_kit`：
+
+| 项目 | 配置 |
 | --- | --- |
-| GCC / Clang / MDK | 支持本地 SCons 编译、链接；尚未上板 |
-| `--target=mdk5` | Arm Compiler 6 项目；IDE 构建待验收 |
-| CMake / VS Code / cdb | 支持工程生成；CMake 使用 GCC |
-| 启动 / GPIO / UART | GPIO 基础模式和读写，Serial V1 IRQ RX / 轮询 TX |
-| 未实现驱动 | GPIO EXTI、UART DMA/TX IRQ/硬件流控及其他外设 |
+| MCU | PY32F403V1DT6，Cortex-M4F，`PY32F403xD` |
+| Flash / SRAM | 384 KiB / 64 KiB |
+| 时钟 | HSE 24 MHz，SYSCLK / AHB / APB1 24 MHz，APB2 12 MHz |
+| 控制台 | UART2，PA2 TX / PA3 RX，115200 8N1 |
+| 板载 LED | PA1，低电平点亮 |
+| 用户按键 | PA0，GPIO 输入 |
 
-硬件验收依次检查烧录复位、PA1 闪烁、UART2 banner/msh、`help`、`list_thread`
-和 GPIO 读写。调试器与烧录方案尚待实物确定。
+SDK 保留厂商 HAL/LL 源码；配套 BSP 当前接入的功能如下：
 
-| 依赖 | 固定基准 |
+| 功能 | 支持情况 |
 | --- | --- |
-| RT-Thread（BSP 改动之前） | `ed686ba95b5e8fb45910efc638544e43ffba89e2` |
-| SDK 官方来源 | `PY32F403_Firmware_V1.4.5` |
-| Env Windows | `fc857c5abb975af9a6c0df5d087a54e02adada3a` |
-| Env scripts | `0fd51234e31a6bc8f901aadd7b7dbd633b774527` |
-| packages 索引基线 | `16ed99eba0a7897311972254bafe0667afb145ee` |
-| CMSIS-Core | `39d8e01f0be84b83a8f11d33756e82ce1ef07a84` |
+| 启动与时钟 | RT-Thread 启动适配、HSE 时钟、SysTick |
+| GPIO | 输入、输出、上下拉、开漏；尚未支持 EXTI |
+| UART1 / UART2 | Serial V1，中断接收、轮询发送；尚未支持 DMA、发送中断和硬件流控 |
+| 其他外设 | 尚未接入 BSP 驱动 |
 
-上表 RT-Thread 基线不包含本次 BSP 实现；实际配套版本以下载和构建记录中的 SHA 为准。
-工具测试：`python -m unittest discover -s tools/tests -v`。
+GCC、Clang 和 MDK 的命令行构建已通过验证。GCC 固件已通过 DAPLink 实物烧录、
+Flash 回读校验及启动、UART2 控制台、SysTick 和 PA1 输出验证；Clang/MDK 固件尚未上板验证。
+当前验证范围为默认 C 工程，C++ 和 MDK IDE 构建尚未验收。
 
-许可证：新增适配与工具使用 [Apache-2.0](LICENSE)；厂商源码保持各文件的
-BSD-3-Clause/Apache-2.0 声明。
+SDK 来源、启动约定及厂商源码差异见 [SDK 说明](sdk/README.md)。新增适配与工具使用
+[Apache-2.0](LICENSE)，厂商源码保留原有许可证声明。

@@ -15,7 +15,7 @@ CMSIS_REVISION = "39d8e01f0be84b83a8f11d33756e82ce1ef07a84"
 INDEX_REVISION = "16ed99eba0a7897311972254bafe0667afb145ee"
 ENV_SCRIPTS_REVISION = "0fd51234e31a6bc8f901aadd7b7dbd633b774527"
 SDK_INDEX = Path("peripherals/hal-sdk/puya/py32f403_sdk")
-SDK_GIT_URL = "https://github.com/luchenxu73/py32-rtthread-sdk.git"
+SDK_GIT_URL = "https://github.com/luchenxu73/py32f403-rtthread-sdk.git"
 SDK_AUTHOR_EMAIL = "luchenxu73@gmail.com"
 
 
@@ -62,7 +62,8 @@ def prepare_index(args):
     if args.sdk_revision and not getattr(args, 'author_email', None):
         raise ValueError("--author-email is required for a downloadable package index")
     source = args.env_root / "packages/packages"
-    require_revision(source, INDEX_REVISION)
+    # The isolated index comes from a pinned clone, not this working tree.
+    require_revision(source, INDEX_REVISION, clean=False)
     target = args.index_root / "packages"
     if target.exists():
         require_revision(target, INDEX_REVISION, clean=False)

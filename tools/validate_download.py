@@ -190,7 +190,7 @@ def archive_manifest(archive):
 
 def prepare_index(env_root, target, sdk_url):
     baseline = env_root / "packages/packages"
-    require_revision(baseline, INDEX_REVISION)
+    require_revision(baseline, INDEX_REVISION, clean=False)
     # git archive reads precisely the pinned tree and never modifies the source index.
     data = subprocess.check_output(["git", "-c", "safe.directory=" + baseline.as_posix(),
                                     "-C", str(baseline), "archive", "--format=zip", INDEX_REVISION])

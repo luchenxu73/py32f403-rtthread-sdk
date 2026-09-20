@@ -3,6 +3,6 @@
 
 from building import *
 
-group = SConscript('sdk/py32f403/SConscript')
+group = SConscript('sdk/SConscript')
 
 Return('group')
