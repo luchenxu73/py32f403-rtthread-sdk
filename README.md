@@ -5,7 +5,7 @@
 维护邮箱为 `luchenxu73@gmail.com`。BSP 本体在 RT-Thread fork 的
 `bsp/py32/py32f403_start_kit/`，本仓不保存 BSP 副本。
 
-当前尚未向 packages 提交索引，也未完成板上验收。按当前开发安排暂不配置 CI。
+SDK 代码已公开，当前尚未向 packages 提交索引，也未完成板上验收。暂不配置 CI。
 临时产物、`AGENTS.md`、提示词及开发计划不进入提交；包导出采用文件白名单。
 
 ## 已确认的首板配置
@@ -53,9 +53,15 @@ python tools/validate_download.py --env-root ../env-windows --bsp-source ../rt-t
 及 Env 自动生成的板卡包桥接脚本。不会替换已有 Env 索引或修改源 BSP。
 
 成功后，日志、`download-validation.json` 和装好实体依赖的 `bsp/` 位于输出目录。
-这覆盖实际包管理器的下载、解包和接入流程；公开 SDK 地址及上游索引的验收
+这覆盖实际包管理器的下载、解包和接入流程；公开 ZIP 地址及上游索引的验收
 仍需在相应版本发布后另做。脚本也接受 `--sdk-url <公开ZIP地址>` 与
 `--sdk-sha256 <64位摘要>`，用于公开产物验收。
+
+已另外完成公开 Git 下载验收：临时索引使用版本 `test-d0e91f3517a9`，URL 指向
+本仓 HTTPS Git 地址，`VER_SHA` 固定为 `d0e91f3517a91e5df8931d829ee53efc8420bde3`。
+真实 Env 下载后，SDK 的全部 166 个文件和 Git blob 与发布提交一致；CMSIS-Core
+也按下表固定提交下载。两个包均为干净的 detached checkout，不使用本地映射。
+这项验证使用独立本地索引，尚不代表官方 packages 索引已收录。
 
 构建该干净副本（从 SDK 仓根目录执行）：
 
@@ -110,6 +116,9 @@ python tools/prepare.py index --env-root ../env-windows --sdk-revision <已发�
 默认 URL 为 `https://github.com/luchenxu73/py32-rtthread-sdk.git`，默认邮箱为
 上述维护邮箱，均可通过参数覆盖。没有显式 SHA 时只准备配置菜单，不虚构可下载
 版本。生成的独立索引位于 `.cache/package-index`，不会修改现有 Env 索引。
+固定 SHA 测试应将隔离索引的版本改为 `test-<SHA前12位>`，同步修改其 Kconfig
+版本值，并先运行 `scons --pyconfig-silent` 更新测试 BSP 配置，再执行下载。
+当前 Env 对 `latest` 还会追加 `git pull`，因此固定提交验收使用独立测试版本号。
 正式版本应补充 tag/版本菜单，再由维护者分别提交 packages 与 RT-Thread PR。
 
 索引包含所需版本后，在板卡目录使用标准流程：
@@ -148,7 +157,7 @@ CMSIS-Core 位于板卡 `packages/`。`scons --dist` 会将依赖实体化到分
 | packages 索引基线 | `16ed99eba0a7897311972254bafe0667afb145ee` |
 | CMSIS-Core | `39d8e01f0be84b83a8f11d33756e82ce1ef07a84` |
 
-BSP 与 SDK 新增实现当前仍为未提交工作区，上表基线不包含本次实现。
+上表 RT-Thread 基线不包含本次 BSP 实现；实际配套版本以下载和构建记录中的 SHA 为准。
 工具测试：`python -m unittest discover -s tools/tests -v`。
 
 许可证：新增适配与工具使用 [Apache-2.0](LICENSE)；厂商源码保持各文件的
