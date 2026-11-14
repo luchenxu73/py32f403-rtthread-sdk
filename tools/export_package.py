@@ -19,15 +19,15 @@ import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SDK = "sdk"
+# The package root is the SDK root, matching the other hal-sdk packages
+# (at32, n32, wch): no extra "sdk/" level between package and vendor tree.
 REQUIRED_FILES = (
-    "SConscript", "LICENSE", "README.md",
-    SDK + "/SConscript", SDK + "/README.md",
+    "SConscript", "LICENSE", "README.md", "SDK.md",
 )
-INCLUDED_DIRECTORIES = tuple(SDK + "/" + name for name in (
+INCLUDED_DIRECTORIES = tuple(name for name in (
     "RTThread", "Templates", "Drivers",
 ))
-EXCLUDED_DIRECTORIES = tuple(SDK + "/Drivers/" + name for name in (
+EXCLUDED_DIRECTORIES = tuple("Drivers/" + name for name in (
     "BSP", "CMSIS/Include", "CMSIS/RTOS", "CMSIS/RTOS2",
 ))
 EXCLUDED_FILE_SUFFIXES = (".o", ".obj", ".d", ".dep", ".elf", ".axf", ".map", ".lst", ".su", ".pyc", ".pyo")

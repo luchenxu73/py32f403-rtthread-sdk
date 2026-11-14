@@ -39,9 +39,11 @@ HAL 版本宏 `V0.0.1`、Device 版本宏 `V1.0.0` 是不同的版本标识。
 
 新增 RT-Thread 适配：
 
-- 根 `SConscript` 显式转入本目录的 `SConscript`。
-- 本目录 `SConscript` 选择 HAL 模块、唯一 system 文件及工具链启动文件，
-  源文件使用相对路径以保持 SCons 构建目录隔离。
+- 包根 `SConscript` 即 SDK 构建入口，与 at32、n32、wch 等 hal-sdk 包一致，
+  两者之间不再有额外的 `sdk/` 层级。
+- `SConscript` 选择 HAL 模块、唯一 system 文件及工具链启动文件，
+  源文件使用相对路径以保持 SCons 构建目录隔离；模块选择只依据
+  `RT_USING_PIN`、`RT_USING_SERIAL` 这类内核符号，不依赖任何 BSP 私有开关。
 - `RTThread/startup_py32f403xx.S` 从原版 GCC 启动文件派生，保留厂商
   版权、向量表和 data/BSS 初始化，在 `SystemInit()` 后调用 RT-Thread
   `entry()`。原版的 `__libc_init_array()` 和直接调用 `main()` 不用于
@@ -60,7 +62,7 @@ GCC/Clang 必须由该处理函数调用 `entry`，随后由 RT-Thread 主线程
 | --- | --- |
 | 包名 | `py32f403_sdk` |
 | 配置项 | `PKG_USING_PY32F403_SDK` |
-| 获取布局 | 整仓 checkout 或裁剪 ZIP；安装后的包根有 `SConscript`，SDK 在 `sdk/` |
+| 获取布局 | 整仓 checkout 或裁剪 ZIP；包根即 SDK 根，与其它 hal-sdk 包一致 |
 | 内容边界 | Device 头文件、system、启动文件与 HAL 合包 |
 | CMSIS-Core | 默认依赖 `PKG_USING_CMSIS_CORE` 共享软件包 |
 | BSP 提供 | 芯片宏、`py32f403_hal_conf.h`、时钟与引脚配置、链接脚本 |

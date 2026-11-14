@@ -29,11 +29,11 @@ class ExportPackageTests(unittest.TestCase):
         self.root.mkdir()
         self.expected = set(exporter.REQUIRED_FILES)
         self.expected.update((
-            "sdk/RTThread/startup.S",
-            "sdk/Templates/PY32F403xx_Templates/Src/system.c",
-            "sdk/Drivers/PY32F403_HAL_Driver/Src/hal.c",
-            "sdk/Drivers/CMSIS/Device/PUYA/PY32F403/Include/device.h",
-            "sdk/Drivers/CMSIS/LICENSE.txt",
+            "RTThread/startup.S",
+            "Templates/PY32F403xx_Templates/Src/system.c",
+            "Drivers/PY32F403_HAL_Driver/Src/hal.c",
+            "Drivers/CMSIS/Device/PUYA/PY32F403/Include/device.h",
+            "Drivers/CMSIS/LICENSE.txt",
         ))
         for relative in self.expected:
             self.write(relative, relative + "\n")
@@ -41,7 +41,7 @@ class ExportPackageTests(unittest.TestCase):
             self.write(directory + "/excluded.c", "never ship")
         self.write("docs/plan2.md", "development-only")
         self.write("tools/prepare.py", "development-only")
-        self.write("sdk/Drivers/PY32F403_HAL_Driver/Src/hal.o", "build output")
+        self.write("Drivers/PY32F403_HAL_Driver/Src/hal.o", "build output")
         self.metadata = {"git_commit": "a" * 40, "dirty": True}
         self.mock = patch.object(exporter, "git_metadata", side_effect=self.get_metadata)
         self.mock.start()
@@ -77,7 +77,7 @@ class ExportPackageTests(unittest.TestCase):
                 self.assertEqual(entry["size"], len(data))
             self.assertTrue(all(info.date_time == exporter.ZIP_TIME for info in archive.infolist()))
         self.assertEqual(Path(result["checksum"]).read_text().split()[0], result["sha256"])
-        self.assertTrue((self.root / "sdk/Drivers/CMSIS/Include/excluded.c").exists())
+        self.assertTrue((self.root / "Drivers/CMSIS/Include/excluded.c").exists())
 
     def test_env_single_root_extraction_contract(self):
         """Exercise Env's first-component extraction/rename contract on disk."""
@@ -152,13 +152,13 @@ class ExportPackageTests(unittest.TestCase):
 
     def test_release_rejects_ignored_source_file(self):
         self.metadata["dirty"] = False
-        self.write("sdk/Drivers/ignored.h", "not versioned")
+        self.write("Drivers/ignored.h", "not versioned")
         with self.assertRaisesRegex(ValueError, "untracked/ignored"):
             exporter.export_package(self.root, release=True)
 
     def test_refuses_source_output_and_existing_artifacts(self):
         with self.assertRaisesRegex(ValueError, "only under dist"):
-            exporter.export_package(self.root, self.root / "sdk/archive.zip", force=True)
+            exporter.export_package(self.root, self.root / "archive.zip", force=True)
         first = exporter.export_package(self.root)
         with self.assertRaisesRegex(ValueError, "already exists"):
             exporter.export_package(self.root)
@@ -166,7 +166,7 @@ class ExportPackageTests(unittest.TestCase):
         self.assertEqual(first["sha256"], replaced["sha256"])
 
     def test_source_link_is_rejected(self):
-        target = self.root / "sdk/Drivers/link.h"
+        target = self.root / "Drivers/link.h"
         try:
             target.symlink_to(self.root / "README.md")
         except OSError as error:
@@ -177,7 +177,7 @@ class ExportPackageTests(unittest.TestCase):
     def test_windows_junction_attribute_is_detected_without_symlink_privileges(self):
         attributes = SimpleNamespace(st_mode=0o40755, st_file_attributes=0x400)
         with patch.object(Path, "lstat", return_value=attributes):
-            self.assertTrue(exporter.is_link(self.root / "sdk"))
+            self.assertTrue(exporter.is_link(self.root / "Drivers"))
 
     def test_state_change_while_exporting_is_rejected(self):
         self.mock.stop()

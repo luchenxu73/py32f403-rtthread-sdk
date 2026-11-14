@@ -24,7 +24,7 @@ RT-Thread online packages
                 Version (latest)
 ```
 
-完整配置后更新packages:
+完成配置后更新packages:
 
 ```text
 pkgs --update
@@ -82,6 +82,21 @@ scons -j8
 | `scons --cdb`          | 生成编译数据库                                |
 | `scons --dist`         | 生成包含 RT-Thread 和依赖软件包的 BSP 分发包  |
 
+清理构建产物：
+
+```shell
+scons -c -n
+scons -c
+```
+
+`-n` 预览清理列表。`scons -c` 清理当前构建图中的中间文件、
+`rtthread.elf/axf/bin/map`、`build/compile_commands.json` 及上游登记的
+`.sconsign.dblite` 等文件。执行前需配置工具链并更新软件包。
+
+清理保留 `.config`、`rtconfig.h`、软件包、工程模板和导出的 CMake/IDE 工程；
+不递归删除整个 `build/`，也不清理 `.config.old` 或 Python 缓存。
+CMake 构建建议放在 `build/cmake/`，该目录不由 `scons -c` 清理。
+
 
 ## Support
 
@@ -109,5 +124,5 @@ GCC、Clang 和 MDK 的命令行构建已通过验证。GCC 固件已通过 DAPL
 Flash 回读校验及启动、UART2 控制台、SysTick 和 PA1 输出验证；Clang/MDK 固件尚未上板验证。
 当前验证范围为默认 C 工程，C++ 和 MDK IDE 构建尚未验收。
 
-SDK 来源、启动约定及厂商源码差异见 [SDK 说明](sdk/README.md)。新增适配与工具使用
+SDK 来源、启动约定及厂商源码差异见 [SDK 说明](SDK.md)。新增适配与工具使用
 [Apache-2.0](LICENSE)，厂商源码保留原有许可证声明。

@@ -87,7 +87,7 @@ class DownloadValidationTests(unittest.TestCase):
     def test_refuses_sdk_output_outside_cache(self):
         with patch.object(download, "ROOT", self.base):
             with self.assertRaisesRegex(ValueError, "only under .cache"):
-                download.new_output(self.base / "sdk/new", self.source)
+                download.new_output(self.base / "output/new", self.source)
             self.assertEqual(download.new_output(self.base / ".cache/new", self.source),
                              self.base / ".cache/new")
 
