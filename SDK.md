@@ -78,8 +78,8 @@ BSP 必须选择与芯片匹配的 `PY32F403xB`、`PY32F403xC` 或
 由仓级工具处理。
 
 默认编译 `hal`、`hal_cortex`、`hal_rcc`、`hal_rcc_ex`、`hal_flash`；
-`BSP_USING_GPIO` 或 `BSP_USING_UART` 启用时增加 `hal_gpio`，
-`BSP_USING_UART` 启用时增加 `hal_uart` 和其依赖的 `hal_dma`。
+`RT_USING_PIN` 或 `RT_USING_SERIAL` 启用时增加 `hal_gpio`，
+`RT_USING_SERIAL` 启用时增加 `hal_uart` 和其依赖的 `hal_dma`。
 厂商 UART 头文件无条件使用 DMA 类型，中断错误路径也引用 DMA 函数；
 编译这项依赖并不表示 BSP 已支持 UART DMA。其余 HAL/LL 源文件
 不自动编译。BSP 的 HAL 配置头须与这些选择保持一致，并在 UART
