@@ -159,6 +159,8 @@ class DownloadValidationTests(unittest.TestCase):
         original = 'mainmenu "Test board"\nrsource "../libraries/Kconfig"\n'
         self.write(self.source / "Kconfig", original)
         self.write(self.source.parent / "libraries/Kconfig", 'config TEST_SERIES\n    bool\n')
+        self.write(self.source / "board/Kconfig", 'rsource "../../libraries/drivers/Kconfig"\n')
+        self.write(self.source.parent / "libraries/drivers/Kconfig", 'menu "Drivers"\nendmenu\n')
         target = self.base / "isolated/bsp"
         changes = download.copy_clean_bsp(self.source, target)
         copied = (target / "Kconfig").read_text()
@@ -167,7 +169,11 @@ class DownloadValidationTests(unittest.TestCase):
         self.assertTrue((target / included).is_file())
         self.assertFalse((target.parent / "libraries/Kconfig").exists())
         self.assertEqual((self.source / "Kconfig").read_text(), original)
-        self.assertEqual(changes[0]["file"], "Kconfig")
+        self.assertTrue(any(change["file"] == "Kconfig" for change in changes))
+        self.assertEqual((target / "board/Kconfig").read_text(),
+                         'rsource "../libraries/drivers/Kconfig"\n')
+        self.assertEqual((self.source / "board/Kconfig").read_text(),
+                         'rsource "../../libraries/drivers/Kconfig"\n')
         before = (target / "Kconfig").read_bytes()
         self.assertEqual(download.adapt_copy_kconfig(target), [])
         self.assertEqual((target / "Kconfig").read_bytes(), before)
@@ -198,7 +204,10 @@ class DownloadValidationTests(unittest.TestCase):
         target = self.base / "relocated/bsp"
         changes = download.copy_clean_bsp(source, target)
         self.assertTrue(any("RTT_DIR" in change["from"] for change in changes))
-        environment = dict(os.environ, RTT_ROOT=str(rtt_root.resolve()), RTT_CC="gcc",
+        # Configuration must work before either compiler installation exists.
+        environment = dict(os.environ, RTT_ROOT=str(rtt_root.resolve()), RTT_CC="llvm-arm",
+                           RTT_EXEC_PATH=str(self.base / "missing clang"),
+                           RTT_GNU_ROOT=str(self.base / "missing gnu"),
                            PKGS_DIR=str(index.resolve()), PKGS_ROOT=str(index.resolve()),
                            ENV_ROOT=str(self.base / "isolated-env"), PYTHONUTF8="1")
         result = subprocess.run([sys.executable, "-m", "SCons", "--pyconfig-silent"],
@@ -209,6 +218,7 @@ class DownloadValidationTests(unittest.TestCase):
         for selected in ("CONFIG_PKG_USING_PY32F403_SDK=y", "CONFIG_PKG_USING_CMSIS_CORE=y"):
             self.assertIn(selected, configured)
         self.assertIn("#define PKG_USING_PY32F403_SDK", (target / "rtconfig.h").read_text())
+        self.assertIn("#define SOC_PY32F403xD", (target / "rtconfig.h").read_text())
         self.assertFalse((target / "packages").exists())
         self.assertEqual((source / ".config").read_bytes(), source_config)
         self.assertEqual((source / "Kconfig").read_bytes(), source_kconfig)

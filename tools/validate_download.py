@@ -108,6 +108,16 @@ def adapt_copy_kconfig(bsp):
     if not (bsp / "libraries/Kconfig").is_file():
         raise ValueError("Copied BSP libraries/Kconfig is missing")
     changes = []
+    board_kconfig = bsp / "board/Kconfig"
+    if board_kconfig.is_file():
+        board_content = board_kconfig.read_text(encoding="utf-8")
+        old_driver_include = 'rsource "../../libraries/drivers/Kconfig"'
+        new_driver_include = 'rsource "../libraries/drivers/Kconfig"'
+        if old_driver_include in board_content:
+            write(board_kconfig, board_content.replace(old_driver_include, new_driver_include))
+            changes.append({"file": "board/Kconfig", "from": old_driver_include,
+                            "to": new_driver_include,
+                            "reason": "Validation copy keeps shared drivers inside its BSP directory"})
     if includes[0] == "../libraries/Kconfig":
         content = re.sub(r'(^\s*rsource\s+)"\.\./libraries/Kconfig"(\s*$)',
                          r'\1"libraries/Kconfig"\2', content, count=1, flags=re.MULTILINE)

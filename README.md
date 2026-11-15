@@ -1,11 +1,13 @@
 # PY32F403 RT-Thread SDK
 
-基于普冉官方SDK，为 RT-Thread 提供 HAL_SDK 包。
+基于普冉官方 SDK，为 RT-Thread 提供 PY32F403 Device 与 HAL 软件包。
 
 当前支持的开发板：
 - py32f403_start_kit
 
 ## 快速开始
+
+准备 RT-Thread Env 和对应编译器，按“编译构建”中的说明设置工具链。
 
 在 Env 终端进入 RT-Thread 源码根目录，打开 BSP 配置菜单：
 
@@ -25,13 +27,13 @@ RT-Thread online packages
                     Version (latest)
 ```
 
-完成配置后更新packages:
+保存配置后，下载依赖软件包：
 
 ```text
 pkgs --update
 ```
 
-SDK 将被安装到 `bsp/py32/libraries/py32f403_sdk-latest/`下。执行以下命令即可完成构建：
+SDK 安装到 `bsp/py32/libraries/py32f403_sdk-latest/`。执行以下命令构建固件：
 
 ```shell
 scons -j8
@@ -99,7 +101,7 @@ scons -c
 CMake 构建建议放在 `build/cmake/`，该目录不由 `scons -c` 清理。
 
 
-## Support
+## 支持范围
 
 当前配套板卡为 `py32f403_start_kit`：
 
@@ -121,9 +123,13 @@ SDK 保留厂商 HAL/LL 源码；配套 BSP 当前接入的功能如下：
 | UART1 / UART2 | Serial V1，中断接收、轮询发送；尚未支持 DMA、发送中断和硬件流控 |
 | 其他外设 | 尚未接入 BSP 驱动 |
 
-GCC、Clang 和 MDK 的命令行构建已通过验证。GCC 固件已通过 DAPLink 实物烧录、
-Flash 回读校验及启动、UART2 控制台、SysTick 和 PA1 输出验证；Clang/MDK 固件尚未上板验证。
-当前验证范围为默认 C 工程，C++ 和 MDK IDE 构建尚未验收。
+| 工具链 | 命令行构建 | 硬件验证范围 |
+| --- | --- | --- |
+| GCC | 已验证 | DAPLink 烧录、Flash 回读、启动、UART2 控制台、SysTick、PA1 输出 |
+| Clang | 已验证 | 未验证 |
+| MDK Arm Compiler 6 | 已验证 | 未验证 |
+
+上述范围适用于默认 C 工程。C++ 和 MDK IDE 内构建尚未验证。
 
 SDK 来源、启动约定及厂商源码差异见 [SDK 说明](SDK.md)。新增适配与工具使用
 [Apache-2.0](LICENSE)，厂商源码保留原有许可证声明。

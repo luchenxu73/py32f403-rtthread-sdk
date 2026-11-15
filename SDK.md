@@ -15,8 +15,7 @@ HAL 版本宏 `V0.0.1`、Device 版本宏 `V1.0.0` 是不同的版本标识。
   Apache-2.0 声明及 [原始许可证](Drivers/CMSIS/LICENSE.txt)。
   本包构建适配脚本使用 Apache-2.0，厂商文件继续遵循各自声明。
 
-本机比对来源为 `D:/code/mcu/proj/py32/PY32F403_Firmware_V1.4.5`。
-此路径只记录来源，不参与构建。补入文件的 SHA-256：
+以下文件来自 `PY32F403_Firmware_V1.4.5`，SHA-256 用于来源核验：
 
 | 文件（相对于 `Templates/PY32F403xx_Templates/`） | SHA-256 |
 | --- | --- |
@@ -24,10 +23,9 @@ HAL 版本宏 `V0.0.1`、Device 版本宏 `V1.0.0` 是不同的版本标识。
 | `EIDE/startup_py32f403xx.s` | `dce54f57f960a44afdb08df915fcb3cabc346cbc0e6919d5e50f845120bbd12c` |
 | `MDK-ARM/startup_py32f403xx.s` | `778356278c3cf1b695e6b904893e0c3c56214ffd9aac15009ca674e39df9e709` |
 
-## 本地修改清单
+## 与官方发行包的差异
 
-在添加 RT-Thread 适配前，仓内 `Drivers/` 与官方包有两处文件差异，
-本次原样保留，尚未验证其硬件行为：
+`Drivers/` 保留了以下两处相对官方发行包的差异，涉及的 LSE 关闭行为尚未经过板级验证：
 
 1. `Drivers/PY32F403_HAL_Driver/Inc/py32f403_hal_rcc.h`
    增加 `RCC_LSE_DIS_TIMEOUT_VALUE`，值为 `2`。
@@ -35,12 +33,11 @@ HAL 版本宏 `V0.0.1`、Device 版本宏 `V1.0.0` 是不同的版本标识。
    两处等待 LSE 关闭的逻辑使用上述 2 ms 阈值退出等待，替代原先
    使用 `RCC_LSE_TIMEOUT_VALUE` 并返回 `HAL_TIMEOUT` 的逻辑。
 
-其余 146 个 `Drivers/` 文件与本机官方包逐文件 SHA-256 比对一致。
+其余 146 个 `Drivers/` 文件与该官方发行包逐文件 SHA-256 比对一致。
 
 新增 RT-Thread 适配：
 
-- 包根 `SConscript` 即 SDK 构建入口，与 at32、n32、wch 等 hal-sdk 包一致，
-  两者之间不再有额外的 `sdk/` 层级。
+- 包根 `SConscript` 为 SDK 构建入口。
 - `SConscript` 选择 HAL 模块、唯一 system 文件及工具链启动文件，
   源文件使用相对路径以保持 SCons 构建目录隔离；模块选择只依据
   `RT_USING_PIN`、`RT_USING_SERIAL` 这类内核符号，不依赖任何 BSP 私有开关。
@@ -97,16 +94,16 @@ BSP 必须选择与芯片匹配的 `PY32F403xB`、`PY32F403xC` 或
 在 BSP 完成，SDK 的默认 HSI 为 8 MHz，默认 HSE 常量为 24 MHz，
 此常量不代表实际板卡焊接了 24 MHz 晶振。
 
-已确认的 `py32f403_start_kit` 使用 PY32F403V1DT6、384 KiB Flash、64 KiB
+`py32f403_start_kit` 使用 PY32F403V1DT6、384 KiB Flash、64 KiB
 SRAM、24 MHz HSE、USART2 PA2/PA3 与 PA1 低有效 LED；这些选择由 BSP 固定。
 
 GCC/LLVM 链接脚本必须提供 `_estack`、`_sidata`、`_sdata`、`_edata`、
 `_sbss`、`_ebss`，保留 `.isr_vector`，启用 `RT_USING_USER_MAIN` 以
 提供 `entry()`。MDK 使用厂商 `__main` 入口与 RT-Thread 的
-`$Sub$$main` 接入机制；实际工程和命令行验收由 BSP 完成。
+`$Sub$$main` 接入机制；工具链参数和工程配置由 BSP 提供。
 
 官方 Device 声明 Cortex-M4、单精度 FPU、3 位 NVIC 优先级。xB/xC/xD
-分别为 128/256/384 KiB Flash，均为 64 KiB RAM；容量应按首板完整
-芯片料号确认后由 BSP 链接脚本固定。官方 Start Kit 参考串口为
+分别为 128/256/384 KiB Flash，均为 64 KiB RAM；各 BSP 应按实际芯片型号
+设置链接容量。官方 Start Kit 参考串口为
 USART2（PA2 TX、PA3 RX、AF2、115200），LED 为 PA1，实际板卡配置
 不由 SDK 强制。
