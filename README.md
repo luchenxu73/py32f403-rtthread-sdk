@@ -14,14 +14,15 @@ cd bsp/py32/py32f403_start_kit
 scons --menuconfig
 ```
 
-软件包位于以下菜单：
+PY32F403 系列配置会自动选中 SDK 和 CMSIS-Core，SDK 版本可在以下菜单中查看或调整：
 
 ```text
 RT-Thread online packages
     peripheral libraries and drivers
         HAL & SDK Drivers
-            [*] PY32F403 SDK (Device and HAL)
-                Version (latest)
+            PUYA HAL & SDK Drivers
+                -*- PY32F403 SDK (Device and HAL)
+                    Version (latest)
 ```
 
 完成配置后更新packages:

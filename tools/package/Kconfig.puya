@@ -1,0 +1,5 @@
+menu "PUYA HAL & SDK Drivers"
+
+source "$PKGS_DIR/packages/peripherals/hal-sdk/puya/py32f403_sdk/Kconfig"
+
+endmenu

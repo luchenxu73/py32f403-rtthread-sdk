@@ -35,6 +35,8 @@ class PrepareTests(unittest.TestCase):
         self.entry = "# pinned package entry\n"
         self.write(self.sdk / "SConscript", "# SDK entry\n")
         self.write(self.sdk / "tools/package/Kconfig", "config PKG_USING_PY32F403_SDK\n    bool\n")
+        self.write(self.sdk / "tools/package/Kconfig.puya",
+                   (SCRIPT.parent / "package/Kconfig.puya").read_text(encoding="utf-8"))
         self.write(self.sdk / "tools/package/package.json.in", json.dumps({
             "name": "py32f403_sdk", "author": {"email": ""},
             "site": [{"version": "latest", "filename": ""}],
@@ -223,6 +225,9 @@ class PrepareTests(unittest.TestCase):
         self.assertEqual(template["site"][0]["VER_SHA"], "main")
 
     def test_fixed_download_mapping_is_created_and_repeat_preserves_it_explicitly(self):
+        legacy = 'source "$PKGS_DIR/packages/peripherals/hal-sdk/puya/py32f403_sdk/Kconfig"'
+        vendor = 'source "$PKGS_DIR/packages/peripherals/hal-sdk/puya/Kconfig"'
+        self.write(self.parent_menu, 'menu "HAL SDK"\n' + legacy + '\nendmenu\n')
         self.args.sdk_url = "https://example.invalid/account/sdk.git"
         self.args.sdk_revision = "c" * 40
         arguments = ["prepare.py", "index", "--env-root", str(self.env),
@@ -243,7 +248,11 @@ class PrepareTests(unittest.TestCase):
             prepare.prepare_index(self.args)
         self.assertEqual(package_json.read_bytes(), before)
         self.assertIn("Retained existing download mapping:", output.getvalue())
-        self.assertEqual(self.parent_menu.read_text().count(str(prepare.SDK_INDEX).replace("\\", "/")), 1)
+        self.assertEqual(self.parent_menu.read_text().count(vendor), 1)
+        self.assertNotIn(legacy, self.parent_menu.read_text())
+        vendor_menu = self.index / "packages" / prepare.SDK_INDEX.parent / "Kconfig"
+        self.assertIn('menu "PUYA HAL & SDK Drivers"', vendor_menu.read_text())
+        self.assertEqual(vendor_menu.read_text().count(legacy), 1)
 
     def test_local_mapping_uses_configured_versions_and_records_sdk_dirty_state(self):
         self.dirty[self.sdk] = " M SConscript"

@@ -51,6 +51,20 @@ def require_revision(path, revision, clean=True):
         raise ValueError(f"Pinned dependency has local modifications: {path}")
 
 
+def prepare_vendor_menu(target):
+    """Install the PUYA menu and migrate indexes that included the SDK directly."""
+    parent = target / "peripherals/hal-sdk/Kconfig"
+    legacy = f'source "$PKGS_DIR/packages/{SDK_INDEX.as_posix()}/Kconfig"'
+    entry = f'source "$PKGS_DIR/packages/{SDK_INDEX.parent.as_posix()}/Kconfig"'
+    content = "".join(line for line in parent.read_text(encoding="utf-8").splitlines(keepends=True)
+                      if line.strip() != legacy)
+    if entry not in content:
+        content = content.replace("endmenu", entry + "\nendmenu", 1)
+    write(parent, content)
+    write(target / SDK_INDEX.parent / "Kconfig",
+          (ROOT / "tools/package/Kconfig.puya").read_text(encoding="utf-8"))
+
+
 def prepare_index(args):
     sdk_url = args.sdk_url or SDK_GIT_URL
     if sdk_url != SDK_GIT_URL and not args.sdk_revision:
@@ -72,11 +86,7 @@ def prepare_index(args):
         subprocess.run(["git", "clone", "https://github.com/RT-Thread/packages.git",
                         str(target)], check=True)
         subprocess.run(["git", "-C", str(target), "checkout", "--detach", INDEX_REVISION], check=True)
-    parent = target / "peripherals/hal-sdk/Kconfig"
-    content = parent.read_text(encoding="utf-8")
-    entry = 'source "$PKGS_DIR/packages/peripherals/hal-sdk/puya/py32f403_sdk/Kconfig"'
-    if entry not in content:
-        write(parent, content.replace("endmenu", entry + "\nendmenu", 1))
+    prepare_vendor_menu(target)
     write(target / SDK_INDEX / "Kconfig", (ROOT / "tools/package/Kconfig").read_text(encoding="utf-8"))
     write(args.index_root / "Kconfig", 'source "$PKGS_DIR/packages/Kconfig"\n')
     if args.sdk_revision:

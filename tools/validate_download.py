@@ -31,7 +31,7 @@ import zipfile
 
 from export_package import ROOT, export_package, is_below, is_link
 from prepare import (CMSIS_REVISION, ENV_SCRIPTS_REVISION, INDEX_REVISION,
-                     SDK_INDEX, literal, require_revision, write)
+                     SDK_INDEX, literal, prepare_vendor_menu, require_revision, write)
 
 CORE_INDEX = Path("system/CMSIS/CMSIS-Core")
 CORE_VERSION = "pinned-" + CMSIS_REVISION[:12]
@@ -196,11 +196,7 @@ def prepare_index(env_root, target, sdk_url):
                                     "-C", str(baseline), "archive", "--format=zip", INDEX_REVISION])
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         archive.extractall(target / "packages")
-    parent = target / "packages/peripherals/hal-sdk/Kconfig"
-    include = 'source "$PKGS_DIR/packages/peripherals/hal-sdk/puya/py32f403_sdk/Kconfig"'
-    content = parent.read_text(encoding="utf-8")
-    if include not in content:
-        write(parent, content.replace("endmenu", include + "\nendmenu", 1))
+    prepare_vendor_menu(target / "packages")
     sdk_kconfig = (ROOT / "tools/package/Kconfig").read_text(encoding="utf-8")
     sdk_kconfig = sdk_kconfig.replace('"latest"', '"' + SDK_VERSION + '"')
     sdk_kconfig = sdk_kconfig.replace("latest (fixed candidate commit in the test index)",
