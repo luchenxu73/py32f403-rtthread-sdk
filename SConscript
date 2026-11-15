@@ -9,10 +9,6 @@ cwd = GetCurrentDir()
 group = []
 
 if GetDepend('PKG_USING_PY32F403_SDK'):
-    if not GetDepend('PKG_USING_CMSIS_CORE'):
-        raise RuntimeError('PY32F403_SDK requires CMSIS-Core. Enable '
-                           'PKG_USING_CMSIS_CORE and run pkgs --update.')
-
     # Relative source paths preserve SCons variant directories, so objects
     # stay in the BSP build tree even when this package is a directory link.
     template = os.path.join('Templates', 'PY32F403xx_Templates')
@@ -25,8 +21,6 @@ if GetDepend('PKG_USING_PY32F403_SDK'):
         src += [os.path.join('RTThread', 'startup_py32f403xx.S')]
     elif rtconfig.PLATFORM in ('armcc', 'armclang'):
         src += [os.path.join(template, 'MDK-ARM', 'startup_py32f403xx.s')]
-    else:
-        raise RuntimeError('Unsupported PY32F403 SDK platform: ' + rtconfig.PLATFORM)
 
     # Key on RT-Thread component symbols, never on BSP-private switches: the
     # package must behave the same for every board that consumes it.

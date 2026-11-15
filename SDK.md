@@ -69,8 +69,7 @@ BSP 必须选择与芯片匹配的 `PY32F403xB`、`PY32F403xC` 或
 型号对应的 Device 头文件，当前接口不声明支持它们。
 
 每次构建只添加共享 CMSIS-Core 的头文件路径。本目录脚本不加入
-`Drivers/CMSIS/Include`，不在缺包时回退到 SDK 自带 Core。BSP 的
-缺包检查还须验证共享包实际文件存在；仅启用配置项不代表包已下载。
+`Drivers/CMSIS/Include`。构建前通过 `pkgs --update` 安装共享 CMSIS-Core 包。
 仓内 `Drivers/CMSIS/RTOS`、`RTOS2` 保留原样但不参与构建，发布裁剪
 由仓级工具处理。
 
